@@ -67,10 +67,18 @@
     "shopify",
     "sdk"
   ],
-  "author": "Adsurf",
+  "author": {
+    "name": "Adsurf",
+    "email": "dev@adsurf.ai",
+    "url": "https://adsurf.ai"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/adsurf/storefront-sdk"
-  }
+    "url": "https://github.com/holdenjrussell/adsurf-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/holdenjrussell/adsurf-sdk/issues"
+  },
+  "homepage": "https://github.com/holdenjrussell/adsurf-sdk#readme"
 }
