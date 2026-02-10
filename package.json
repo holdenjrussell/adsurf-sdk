@@ -75,7 +75,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/holdenjrussell/adsurf-sdk.git"
+    "url": "git+https://github.com/holdenjrussell/adsurf-sdk.git"
   },
   "bugs": {
     "url": "https://github.com/holdenjrussell/adsurf-sdk/issues"
