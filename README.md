@@ -130,6 +130,183 @@ function Layout({ children }) {
 }
 ```
 
+### CustomerPortal
+
+Drop-in customer account portal with orders, subscriptions, and profile management.
+
+```tsx
+import { CustomerPortal } from '@adsurf/storefront-sdk'
+
+export default function AccountPage() {
+  return (
+    <CustomerPortal
+      onLoginRedirect={() => {
+        window.location.href = '/account/login'
+      }}
+    />
+  )
+}
+```
+
+## Application Forms
+
+Pre-built forms for creator/vendor onboarding and contact pages that submit to your platform API.
+
+### CreatorApplicationForm
+
+```tsx
+import { CreatorApplicationForm } from '@adsurf/storefront-sdk'
+
+export default function CreatorApplyPage() {
+  return (
+    <CreatorApplicationForm
+      endpoint="/api/storefront/creators/apply"
+      title="Join Our Creator Program"
+      description="Partner with us and earn commission on sales."
+      onSuccess={(data) => {
+        // Handle success - redirect, show message, etc.
+        console.log('Application submitted:', data)
+      }}
+    />
+  )
+}
+```
+
+### VendorApplicationForm
+
+```tsx
+import { VendorApplicationForm } from '@adsurf/storefront-sdk'
+
+export default function VendorApplyPage() {
+  return (
+    <VendorApplicationForm
+      endpoint="/api/storefront/vendors/apply"
+      title="Wholesale Partnership"
+      description="Apply to become a wholesale partner."
+      onSuccess={() => router.push('/vendor-apply/thank-you')}
+    />
+  )
+}
+```
+
+### ContactForm
+
+```tsx
+import { ContactForm } from '@adsurf/storefront-sdk'
+
+export default function ContactPage() {
+  return (
+    <ContactForm
+      endpoint="/api/storefront/contact"
+      title="Get In Touch"
+      description="We'd love to hear from you."
+    />
+  )
+}
+```
+
+### Custom ApplicationForm
+
+Build custom forms with any fields:
+
+```tsx
+import { ApplicationForm } from '@adsurf/storefront-sdk'
+
+export default function CustomFormPage() {
+  return (
+    <ApplicationForm
+      title="Custom Application"
+      description="Tell us about yourself."
+      endpoint="/api/storefront/custom-form"
+      fields={[
+        { name: 'name', label: 'Full Name', type: 'text', required: true },
+        { name: 'email', label: 'Email', type: 'email', required: true },
+        { name: 'phone', label: 'Phone', type: 'tel' },
+        {
+          name: 'interest',
+          label: 'Interest',
+          type: 'select',
+          required: true,
+          options: [
+            { value: 'retail', label: 'Retail' },
+            { value: 'wholesale', label: 'Wholesale' },
+            { value: 'other', label: 'Other' },
+          ],
+        },
+        { name: 'message', label: 'Message', type: 'textarea' },
+      ]}
+      submitLabel="Apply Now"
+      successMessage="Thanks! We'll be in touch soon."
+      onSuccess={(data) => console.log('Submitted:', data)}
+      onError={(err) => console.error('Error:', err)}
+    />
+  )
+}
+```
+
+**Field Types:**
+- `text` - Standard text input
+- `email` - Email input with validation
+- `tel` - Phone number input
+- `url` - URL input with validation
+- `number` - Numeric input
+- `textarea` - Multi-line text
+- `select` - Dropdown with options
+
+**Styling:**
+Pass custom class names via the `styles` prop:
+
+```tsx
+<ApplicationForm
+  styles={{
+    container: 'bg-white p-8 rounded-lg shadow',
+    title: 'text-2xl font-bold',
+    label: 'text-sm font-medium',
+    input: 'border rounded px-4 py-2',
+    button: 'bg-blue-600 text-white py-3 rounded',
+    error: 'text-red-600 text-sm',
+    success: 'text-green-600 text-sm',
+  }}
+  // ...
+/>
+```
+
+## BookingWidget
+
+Embeddable booking/scheduling widget for appointment scheduling.
+
+```tsx
+import { BookingWidget } from '@adsurf/storefront-sdk'
+
+export default function BookPage() {
+  return (
+    <BookingWidget
+      apiBaseUrl="https://your-platform.com/api"
+      userSlug="team-member" // Optional: specific team member
+      eventTypeId="evt_123" // Optional: pre-select event type
+      onBookingComplete={(booking) => {
+        console.log('Booked:', booking)
+      }}
+      onError={(err) => {
+        console.error('Booking error:', err)
+      }}
+    />
+  )
+}
+```
+
+The widget handles:
+- Event type selection
+- Calendar date picking
+- Time slot selection
+- Guest information form
+- Booking confirmation
+
+Your platform API needs these endpoints:
+- `GET /booking/{userSlug}/event-types` - List available event types
+- `GET /booking/availability?eventTypeId=X&date=YYYY-MM-DD` - Get available slots
+- `POST /booking/create` - Create a booking
+
 ## Analytics
 
 ```typescript

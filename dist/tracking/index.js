@@ -21,10 +21,17 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 var tracking_exports = {};
 __export(tracking_exports, {
   initializeAnalytics: () => initializeAnalytics,
+  initializePixel: () => initializePixel,
   trackAddToCart: () => trackAddToCart,
   trackBeginCheckout: () => trackBeginCheckout,
   trackEvent: () => trackEvent,
   trackPageView: () => trackPageView,
+  trackPixelAddToCart: () => trackPixelAddToCart,
+  trackPixelCheckoutStart: () => trackPixelCheckoutStart,
+  trackPixelCustomEvent: () => trackPixelCustomEvent,
+  trackPixelPageView: () => trackPixelPageView,
+  trackPixelProductView: () => trackPixelProductView,
+  trackPixelPurchase: () => trackPixelPurchase,
   trackPurchase: () => trackPurchase,
   trackRemoveFromCart: () => trackRemoveFromCart,
   trackViewItem: () => trackViewItem
@@ -155,13 +162,127 @@ function trackEvent(eventName, params) {
   if (typeof window === "undefined") return;
   window.gtag?.("event", eventName, params);
 }
+
+// src/tracking/pixel.ts
+var pixelConfig = null;
+function initializePixel(config) {
+  pixelConfig = config;
+  if (typeof window !== "undefined") {
+    const script = document.createElement("script");
+    script.src = `${config.platformUrl}/pixel.js`;
+    script.async = true;
+    script.dataset.brandId = config.brandId;
+    document.head.appendChild(script);
+  }
+}
+function trackPixelPageView(path) {
+  if (typeof window === "undefined" || !pixelConfig) return;
+  sendPixelEvent({
+    event: "page_view",
+    metadata: {
+      path: path || window.location.pathname,
+      referrer: document.referrer,
+      url: window.location.href
+    }
+  });
+}
+function trackPixelProductView(productId, productName, price) {
+  sendPixelEvent({
+    event: "view_item",
+    value: price,
+    items: [
+      {
+        id: productId,
+        name: productName,
+        price: price || 0,
+        quantity: 1
+      }
+    ]
+  });
+}
+function trackPixelAddToCart(productId, productName, price, quantity) {
+  sendPixelEvent({
+    event: "add_to_cart",
+    value: price * quantity,
+    items: [
+      {
+        id: productId,
+        name: productName,
+        price,
+        quantity
+      }
+    ]
+  });
+}
+function trackPixelCheckoutStart(cartValue, items) {
+  sendPixelEvent({
+    event: "begin_checkout",
+    value: cartValue,
+    items
+  });
+}
+function trackPixelPurchase(orderId, value, currency, items) {
+  sendPixelEvent({
+    event: "purchase",
+    orderId,
+    value,
+    currency,
+    items
+  });
+}
+function trackPixelCustomEvent(eventName, data) {
+  sendPixelEvent({
+    event: eventName,
+    metadata: data
+  });
+}
+function sendPixelEvent(data) {
+  if (typeof window === "undefined" || !pixelConfig) return;
+  const payload = JSON.stringify({
+    ...data,
+    brandId: pixelConfig.brandId,
+    timestamp: Date.now(),
+    sessionId: getSessionId(),
+    url: window.location.href,
+    userAgent: navigator.userAgent
+  });
+  const endpoint = `${pixelConfig.platformUrl}/api/pixel/track`;
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon(endpoint, payload);
+  } else {
+    fetch(endpoint, {
+      method: "POST",
+      body: payload,
+      headers: { "Content-Type": "application/json" },
+      keepalive: true
+    }).catch(() => {
+    });
+  }
+}
+function getSessionId() {
+  if (typeof window === "undefined") return "";
+  const key = "adsurf_session_id";
+  let sessionId = sessionStorage.getItem(key);
+  if (!sessionId) {
+    sessionId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem(key, sessionId);
+  }
+  return sessionId;
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   initializeAnalytics,
+  initializePixel,
   trackAddToCart,
   trackBeginCheckout,
   trackEvent,
   trackPageView,
+  trackPixelAddToCart,
+  trackPixelCheckoutStart,
+  trackPixelCustomEvent,
+  trackPixelPageView,
+  trackPixelProductView,
+  trackPixelPurchase,
   trackPurchase,
   trackRemoveFromCart,
   trackViewItem

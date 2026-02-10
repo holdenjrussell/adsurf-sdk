@@ -57,4 +57,53 @@ declare function trackPurchase(transactionId: string, items: EcommerceItem[], va
  */
 declare function trackEvent(eventName: string, params?: Record<string, unknown>): void;
 
-export { type AnalyticsConfig, type EcommerceItem, initializeAnalytics, trackAddToCart, trackBeginCheckout, trackEvent, trackPageView, trackPurchase, trackRemoveFromCart, trackViewItem };
+/**
+ * Attribution pixel for tracking conversions across platforms
+ */
+interface PixelConfig {
+    platformUrl: string;
+    brandId: string;
+}
+interface AttributionData {
+    event: string;
+    value?: number;
+    currency?: string;
+    orderId?: string;
+    items?: Array<{
+        id: string;
+        name: string;
+        price: number;
+        quantity: number;
+    }>;
+    metadata?: Record<string, unknown>;
+}
+/**
+ * Initialize the attribution pixel
+ */
+declare function initializePixel(config: PixelConfig): void;
+/**
+ * Track a page view
+ */
+declare function trackPixelPageView(path?: string): void;
+/**
+ * Track a product view
+ */
+declare function trackPixelProductView(productId: string, productName: string, price?: number): void;
+/**
+ * Track add to cart
+ */
+declare function trackPixelAddToCart(productId: string, productName: string, price: number, quantity: number): void;
+/**
+ * Track checkout initiation
+ */
+declare function trackPixelCheckoutStart(cartValue: number, items: AttributionData['items']): void;
+/**
+ * Track purchase completion
+ */
+declare function trackPixelPurchase(orderId: string, value: number, currency: string, items: AttributionData['items']): void;
+/**
+ * Track custom event
+ */
+declare function trackPixelCustomEvent(eventName: string, data?: Record<string, unknown>): void;
+
+export { type AnalyticsConfig, type EcommerceItem, initializeAnalytics, initializePixel, trackAddToCart, trackBeginCheckout, trackEvent, trackPageView, trackPixelAddToCart, trackPixelCheckoutStart, trackPixelCustomEvent, trackPixelPageView, trackPixelProductView, trackPixelPurchase, trackPurchase, trackRemoveFromCart, trackViewItem };

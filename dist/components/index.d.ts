@@ -1,5 +1,5 @@
 import * as react_jsx_runtime from 'react/jsx-runtime';
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { b as Product } from '../api-BTVT5zs0.js';
 
 interface AddToCartButtonProps {
@@ -82,4 +82,131 @@ interface SubscribeWidgetProps {
 }
 declare function SubscribeWidget({ product, variant, sellingPlans, className, onSubscribe, onOneTimePurchase, showOneTimePurchase, defaultSelection, priceFormatter, }: SubscribeWidgetProps): react_jsx_runtime.JSX.Element;
 
-export { AddToCartButton, type AddToCartButtonProps, CartDrawer, type CartDrawerProps, CustomerPortal, type CustomerPortalProps, ProductCard, type ProductCardProps, type SellingPlan, SubscribeWidget, type SubscribeWidgetProps };
+interface ApplicationField {
+    name: string;
+    label: string;
+    type: 'text' | 'email' | 'tel' | 'textarea' | 'select' | 'url' | 'number';
+    required?: boolean;
+    placeholder?: string;
+    options?: {
+        value: string;
+        label: string;
+    }[];
+    validation?: (value: string) => string | null;
+}
+interface ApplicationFormProps {
+    /** Form title */
+    title: string;
+    /** Form description/subtitle */
+    description?: string;
+    /** Fields to render */
+    fields: ApplicationField[];
+    /** API endpoint to submit to (relative or absolute) */
+    endpoint: string;
+    /** HTTP method (default: POST) */
+    method?: 'POST' | 'PUT';
+    /** Additional data to include in submission */
+    additionalData?: Record<string, unknown>;
+    /** Submit button text */
+    submitLabel?: string;
+    /** Submitting button text */
+    submittingLabel?: string;
+    /** Success message */
+    successMessage?: string;
+    /** Called on successful submission */
+    onSuccess?: (response: unknown) => void;
+    /** Called on error */
+    onError?: (error: Error) => void;
+    /** Custom header content */
+    headerContent?: ReactNode;
+    /** Custom footer content */
+    footerContent?: ReactNode;
+    /** Custom class name for form container */
+    className?: string;
+    /** Custom styles */
+    styles?: {
+        container?: string;
+        title?: string;
+        description?: string;
+        field?: string;
+        label?: string;
+        input?: string;
+        button?: string;
+        error?: string;
+        success?: string;
+    };
+}
+declare function ApplicationForm({ title, description, fields, endpoint, method, additionalData, submitLabel, submittingLabel, successMessage, onSuccess, onError, headerContent, footerContent, className, styles, }: ApplicationFormProps): react_jsx_runtime.JSX.Element;
+/**
+ * Pre-configured creator/contractor application form
+ */
+declare function CreatorApplicationForm({ endpoint, title, description, onSuccess, onError, ...props }: Omit<ApplicationFormProps, 'fields'> & {
+    endpoint: string;
+}): react_jsx_runtime.JSX.Element;
+/**
+ * Pre-configured vendor/wholesale application form
+ */
+declare function VendorApplicationForm({ endpoint, title, description, onSuccess, onError, ...props }: Omit<ApplicationFormProps, 'fields'> & {
+    endpoint: string;
+}): react_jsx_runtime.JSX.Element;
+/**
+ * Simple contact form
+ */
+declare function ContactForm({ endpoint, title, description, onSuccess, onError, ...props }: Omit<ApplicationFormProps, 'fields'> & {
+    endpoint: string;
+}): react_jsx_runtime.JSX.Element;
+
+interface TimeSlot {
+    id: string;
+    startTime: string;
+    endTime: string;
+    available: boolean;
+}
+interface EventType {
+    id: string;
+    slug: string;
+    title: string;
+    description?: string;
+    duration: number;
+    price?: number;
+    currency?: string;
+}
+interface BookingData {
+    eventTypeId: string;
+    slotId: string;
+    startTime: string;
+    name: string;
+    email: string;
+    phone?: string;
+    notes?: string;
+}
+interface BookingWidgetProps {
+    /** API base URL for fetching availability and creating bookings */
+    apiBaseUrl: string;
+    /** Optional event type to pre-select */
+    eventTypeId?: string;
+    /** Optional user/team slug for specific availability */
+    userSlug?: string;
+    /** Called when booking is successful */
+    onBookingComplete?: (booking: unknown) => void;
+    /** Called on error */
+    onError?: (error: Error) => void;
+    /** Custom header content */
+    headerContent?: ReactNode;
+    /** Custom footer content */
+    footerContent?: ReactNode;
+    /** Custom class names */
+    className?: string;
+    /** Custom styles */
+    styles?: {
+        container?: string;
+        calendar?: string;
+        timeSlot?: string;
+        selectedSlot?: string;
+        form?: string;
+        button?: string;
+    };
+}
+declare function BookingWidget({ apiBaseUrl, eventTypeId: preselectedEventTypeId, userSlug, onBookingComplete, onError, headerContent, footerContent, className, styles, }: BookingWidgetProps): react_jsx_runtime.JSX.Element;
+
+export { AddToCartButton, type AddToCartButtonProps, type ApplicationField, ApplicationForm, type ApplicationFormProps, type BookingData, BookingWidget, type BookingWidgetProps, CartDrawer, type CartDrawerProps, ContactForm, CreatorApplicationForm, CustomerPortal, type CustomerPortalProps, type EventType, ProductCard, type ProductCardProps, type SellingPlan, SubscribeWidget, type SubscribeWidgetProps, type TimeSlot, VendorApplicationForm };

@@ -1238,11 +1238,703 @@ function CheckIcon({ className }) {
     }
   );
 }
+
+// src/components/ApplicationForm/index.tsx
+import { useState as useState6 } from "react";
+import { jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
+function ApplicationForm({
+  title,
+  description,
+  fields,
+  endpoint,
+  method = "POST",
+  additionalData = {},
+  submitLabel = "Submit",
+  submittingLabel = "Submitting...",
+  successMessage = "Your application has been submitted successfully.",
+  onSuccess,
+  onError,
+  headerContent,
+  footerContent,
+  className = "",
+  styles = {}
+}) {
+  const [formData, setFormData] = useState6(() => {
+    const initial = {};
+    fields.forEach((field) => {
+      initial[field.name] = "";
+    });
+    return initial;
+  });
+  const [isSubmitting, setIsSubmitting] = useState6(false);
+  const [message, setMessage] = useState6(null);
+  const [fieldErrors, setFieldErrors] = useState6({});
+  const validateField = (field, value) => {
+    if (field.required && !value.trim()) {
+      return `${field.label} is required`;
+    }
+    if (field.validation) {
+      return field.validation(value);
+    }
+    if (field.type === "email" && value) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        return "Please enter a valid email address";
+      }
+    }
+    if (field.type === "url" && value) {
+      try {
+        new URL(value);
+      } catch {
+        return "Please enter a valid URL";
+      }
+    }
+    return null;
+  };
+  const validateAllFields = () => {
+    const errors = {};
+    let isValid = true;
+    fields.forEach((field) => {
+      const error = validateField(field, formData[field.name] || "");
+      if (error) {
+        errors[field.name] = error;
+        isValid = false;
+      }
+    });
+    setFieldErrors(errors);
+    return isValid;
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage(null);
+    if (!validateAllFields()) {
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          ...additionalData
+        })
+      });
+      const data = await response.json();
+      if (response.ok && data.success !== false) {
+        setMessage({ type: "success", text: data.message || successMessage });
+        const resetData = {};
+        fields.forEach((field) => {
+          resetData[field.name] = "";
+        });
+        setFormData(resetData);
+        setFieldErrors({});
+        onSuccess?.(data);
+      } else {
+        const errorText = data.error || data.message || "Failed to submit form";
+        setMessage({ type: "error", text: errorText });
+        onError?.(new Error(errorText));
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to submit form";
+      setMessage({ type: "error", text: errorMessage });
+      onError?.(err instanceof Error ? err : new Error(errorMessage));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  const handleChange = (name, value) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
+  };
+  const renderField = (field) => {
+    const baseInputClass = styles.input || "w-full border border-gray-300 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent";
+    const errorClass = fieldErrors[field.name] ? "border-red-500" : "";
+    switch (field.type) {
+      case "textarea":
+        return /* @__PURE__ */ jsx6(
+          "textarea",
+          {
+            value: formData[field.name] || "",
+            onChange: (e) => handleChange(field.name, e.target.value),
+            required: field.required,
+            placeholder: field.placeholder,
+            rows: 4,
+            className: `${baseInputClass} ${errorClass}`
+          }
+        );
+      case "select":
+        return /* @__PURE__ */ jsxs5(
+          "select",
+          {
+            value: formData[field.name] || "",
+            onChange: (e) => handleChange(field.name, e.target.value),
+            required: field.required,
+            className: `${baseInputClass} ${errorClass}`,
+            children: [
+              /* @__PURE__ */ jsx6("option", { value: "", children: "Select..." }),
+              field.options?.map((opt) => /* @__PURE__ */ jsx6("option", { value: opt.value, children: opt.label }, opt.value))
+            ]
+          }
+        );
+      default:
+        return /* @__PURE__ */ jsx6(
+          "input",
+          {
+            type: field.type,
+            value: formData[field.name] || "",
+            onChange: (e) => handleChange(field.name, e.target.value),
+            required: field.required,
+            placeholder: field.placeholder,
+            className: `${baseInputClass} ${errorClass}`
+          }
+        );
+    }
+  };
+  return /* @__PURE__ */ jsxs5("div", { className: styles.container || `bg-white border border-gray-200 p-8 lg:p-12 ${className}`, children: [
+    headerContent,
+    /* @__PURE__ */ jsxs5("div", { className: "mb-8 text-center", children: [
+      /* @__PURE__ */ jsx6("h1", { className: styles.title || "text-3xl lg:text-4xl font-bold text-gray-900 uppercase", children: title }),
+      description && /* @__PURE__ */ jsx6("p", { className: styles.description || "text-sm text-gray-500 mt-3", children: description })
+    ] }),
+    message && /* @__PURE__ */ jsx6(
+      "div",
+      {
+        className: message.type === "success" ? styles.success || "mb-6 p-4 text-sm bg-green-50 border border-green-200 text-green-700" : styles.error || "mb-6 p-4 text-sm bg-red-50 border border-red-200 text-red-700",
+        children: message.text
+      }
+    ),
+    /* @__PURE__ */ jsxs5("form", { onSubmit: handleSubmit, className: "space-y-5", children: [
+      fields.map((field) => /* @__PURE__ */ jsxs5("div", { className: styles.field, children: [
+        /* @__PURE__ */ jsxs5("label", { className: styles.label || "block text-sm text-gray-900 mb-2 uppercase font-medium", children: [
+          field.label,
+          field.required && /* @__PURE__ */ jsx6("span", { className: "text-red-500 ml-1", children: "*" })
+        ] }),
+        renderField(field),
+        fieldErrors[field.name] && /* @__PURE__ */ jsx6("p", { className: "text-red-500 text-sm mt-1", children: fieldErrors[field.name] })
+      ] }, field.name)),
+      /* @__PURE__ */ jsx6(
+        "button",
+        {
+          type: "submit",
+          disabled: isSubmitting,
+          className: styles.button || "w-full bg-black text-white text-sm uppercase tracking-wider py-4 hover:opacity-90 transition-opacity disabled:opacity-50",
+          children: isSubmitting ? submittingLabel : submitLabel
+        }
+      )
+    ] }),
+    footerContent
+  ] });
+}
+function CreatorApplicationForm({
+  endpoint,
+  title = "Creator Application",
+  description = "Join our creator program and start earning.",
+  onSuccess,
+  onError,
+  ...props
+}) {
+  return /* @__PURE__ */ jsx6(
+    ApplicationForm,
+    {
+      title,
+      description,
+      endpoint,
+      fields: [
+        { name: "name", label: "Full Name", type: "text", required: true },
+        { name: "email", label: "Email", type: "email", required: true },
+        { name: "phone", label: "Phone Number", type: "tel" },
+        { name: "instagram", label: "Instagram Handle", type: "text", placeholder: "@username" },
+        { name: "tiktok", label: "TikTok Handle", type: "text", placeholder: "@username" },
+        { name: "followers", label: "Total Followers", type: "number", placeholder: "Approximate total" },
+        { name: "message", label: "Why do you want to partner with us?", type: "textarea" }
+      ],
+      onSuccess,
+      onError,
+      ...props
+    }
+  );
+}
+function VendorApplicationForm({
+  endpoint,
+  title = "Vendor Application",
+  description = "Apply to become a wholesale partner.",
+  onSuccess,
+  onError,
+  ...props
+}) {
+  return /* @__PURE__ */ jsx6(
+    ApplicationForm,
+    {
+      title,
+      description,
+      endpoint,
+      fields: [
+        { name: "businessName", label: "Business Name", type: "text", required: true },
+        { name: "contactName", label: "Contact Name", type: "text", required: true },
+        { name: "email", label: "Email", type: "email", required: true },
+        { name: "phone", label: "Phone Number", type: "tel", required: true },
+        { name: "website", label: "Website", type: "url" },
+        {
+          name: "businessType",
+          label: "Business Type",
+          type: "select",
+          required: true,
+          options: [
+            { value: "retail", label: "Retail Store" },
+            { value: "salon", label: "Salon/Spa" },
+            { value: "gym", label: "Gym/Fitness" },
+            { value: "online", label: "Online Retailer" },
+            { value: "other", label: "Other" }
+          ]
+        },
+        { name: "message", label: "Tell us about your business", type: "textarea" }
+      ],
+      onSuccess,
+      onError,
+      ...props
+    }
+  );
+}
+function ContactForm({
+  endpoint,
+  title = "Contact Us",
+  description = "We'd love to hear from you.",
+  onSuccess,
+  onError,
+  ...props
+}) {
+  return /* @__PURE__ */ jsx6(
+    ApplicationForm,
+    {
+      title,
+      description,
+      endpoint,
+      submitLabel: "Send Message",
+      submittingLabel: "Sending...",
+      successMessage: "Your message has been sent. We'll get back to you soon.",
+      fields: [
+        { name: "name", label: "Name", type: "text", required: true },
+        { name: "email", label: "Email", type: "email", required: true },
+        { name: "subject", label: "Subject", type: "text", required: true },
+        { name: "message", label: "Message", type: "textarea", required: true }
+      ],
+      onSuccess,
+      onError,
+      ...props
+    }
+  );
+}
+
+// src/components/BookingWidget/index.tsx
+import { useState as useState7, useEffect as useEffect2 } from "react";
+import { Fragment as Fragment2, jsx as jsx7, jsxs as jsxs6 } from "react/jsx-runtime";
+function formatDate(date) {
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+}
+function formatTime(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
+  });
+}
+function getDaysInMonth(year, month) {
+  const days = [];
+  const date = new Date(year, month, 1);
+  while (date.getMonth() === month) {
+    days.push(new Date(date));
+    date.setDate(date.getDate() + 1);
+  }
+  return days;
+}
+function BookingWidget({
+  apiBaseUrl,
+  eventTypeId: preselectedEventTypeId,
+  userSlug,
+  onBookingComplete,
+  onError,
+  headerContent,
+  footerContent,
+  className = "",
+  styles = {}
+}) {
+  const [step, setStep] = useState7("eventType");
+  const [eventTypes, setEventTypes] = useState7([]);
+  const [selectedEventType, setSelectedEventType] = useState7(null);
+  const [selectedDate, setSelectedDate] = useState7(null);
+  const [availableSlots, setAvailableSlots] = useState7([]);
+  const [selectedSlot, setSelectedSlot] = useState7(null);
+  const [isLoading, setIsLoading] = useState7(false);
+  const [error, setError] = useState7(null);
+  const [formData, setFormData] = useState7({
+    name: "",
+    email: "",
+    phone: "",
+    notes: ""
+  });
+  const [currentMonth, setCurrentMonth] = useState7(() => {
+    const now = /* @__PURE__ */ new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
+  useEffect2(() => {
+    async function fetchEventTypes() {
+      try {
+        setIsLoading(true);
+        const url = userSlug ? `${apiBaseUrl}/booking/${userSlug}/event-types` : `${apiBaseUrl}/booking/event-types`;
+        const response = await fetch(url);
+        const data = await response.json();
+        setEventTypes(data.eventTypes || []);
+        if (preselectedEventTypeId) {
+          const preselected = data.eventTypes?.find((et) => et.id === preselectedEventTypeId);
+          if (preselected) {
+            setSelectedEventType(preselected);
+            setStep("calendar");
+          }
+        }
+      } catch (err) {
+        setError("Failed to load event types");
+        onError?.(err instanceof Error ? err : new Error("Failed to load event types"));
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchEventTypes();
+  }, [apiBaseUrl, userSlug, preselectedEventTypeId, onError]);
+  useEffect2(() => {
+    if (!selectedDate || !selectedEventType) return;
+    const date = selectedDate;
+    const eventType = selectedEventType;
+    async function fetchAvailability() {
+      try {
+        setIsLoading(true);
+        const dateStr = date.toISOString().split("T")[0];
+        const url = `${apiBaseUrl}/booking/availability?eventTypeId=${eventType.id}&date=${dateStr}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        setAvailableSlots(data.slots || []);
+        setStep("time");
+      } catch (err) {
+        setError("Failed to load available times");
+        onError?.(err instanceof Error ? err : new Error("Failed to load availability"));
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchAvailability();
+  }, [selectedDate, selectedEventType, apiBaseUrl, onError]);
+  const handleSelectEventType = (eventType) => {
+    setSelectedEventType(eventType);
+    setStep("calendar");
+  };
+  const handleSelectDate = (date) => {
+    setSelectedDate(date);
+  };
+  const handleSelectSlot = (slot) => {
+    setSelectedSlot(slot);
+    setStep("form");
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedEventType || !selectedSlot) return;
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch(`${apiBaseUrl}/booking/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventTypeId: selectedEventType.id,
+          slotId: selectedSlot.id,
+          startTime: selectedSlot.startTime,
+          ...formData
+        })
+      });
+      const data = await response.json();
+      if (response.ok && data.success !== false) {
+        setStep("confirmation");
+        onBookingComplete?.(data);
+      } else {
+        throw new Error(data.error || "Failed to create booking");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create booking");
+      onError?.(err instanceof Error ? err : new Error("Failed to create booking"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const goBack = () => {
+    switch (step) {
+      case "calendar":
+        setStep("eventType");
+        setSelectedEventType(null);
+        break;
+      case "time":
+        setStep("calendar");
+        setSelectedDate(null);
+        break;
+      case "form":
+        setStep("time");
+        setSelectedSlot(null);
+        break;
+    }
+  };
+  const renderEventTypeSelection = () => /* @__PURE__ */ jsxs6("div", { className: "space-y-4", children: [
+    /* @__PURE__ */ jsx7("h2", { className: "text-xl font-semibold", children: "Select a Service" }),
+    eventTypes.map((et) => /* @__PURE__ */ jsxs6(
+      "button",
+      {
+        onClick: () => handleSelectEventType(et),
+        className: "w-full text-left p-4 border border-gray-200 rounded-lg hover:border-black transition-colors",
+        children: [
+          /* @__PURE__ */ jsx7("div", { className: "font-medium", children: et.title }),
+          et.description && /* @__PURE__ */ jsx7("div", { className: "text-sm text-gray-500 mt-1", children: et.description }),
+          /* @__PURE__ */ jsxs6("div", { className: "text-sm text-gray-600 mt-2", children: [
+            et.duration,
+            " minutes",
+            et.price && ` \u2022 $${et.price}`
+          ] })
+        ]
+      },
+      et.id
+    ))
+  ] });
+  const renderCalendar = () => {
+    const days = getDaysInMonth(currentMonth.year, currentMonth.month);
+    const today = /* @__PURE__ */ new Date();
+    today.setHours(0, 0, 0, 0);
+    return /* @__PURE__ */ jsxs6("div", { className: styles.calendar, children: [
+      /* @__PURE__ */ jsxs6("div", { className: "flex items-center justify-between mb-4", children: [
+        /* @__PURE__ */ jsx7(
+          "button",
+          {
+            onClick: goBack,
+            className: "text-sm text-gray-500 hover:text-black",
+            children: "\u2190 Back"
+          }
+        ),
+        /* @__PURE__ */ jsx7("h2", { className: "text-xl font-semibold", children: "Select a Date" }),
+        /* @__PURE__ */ jsx7("div", {})
+      ] }),
+      /* @__PURE__ */ jsxs6("div", { className: "flex items-center justify-between mb-4", children: [
+        /* @__PURE__ */ jsx7(
+          "button",
+          {
+            onClick: () => {
+              const newMonth = currentMonth.month === 0 ? 11 : currentMonth.month - 1;
+              const newYear = currentMonth.month === 0 ? currentMonth.year - 1 : currentMonth.year;
+              setCurrentMonth({ year: newYear, month: newMonth });
+            },
+            className: "p-2 hover:bg-gray-100 rounded",
+            children: "\u2190"
+          }
+        ),
+        /* @__PURE__ */ jsx7("span", { className: "font-medium", children: new Date(currentMonth.year, currentMonth.month).toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric"
+        }) }),
+        /* @__PURE__ */ jsx7(
+          "button",
+          {
+            onClick: () => {
+              const newMonth = currentMonth.month === 11 ? 0 : currentMonth.month + 1;
+              const newYear = currentMonth.month === 11 ? currentMonth.year + 1 : currentMonth.year;
+              setCurrentMonth({ year: newYear, month: newMonth });
+            },
+            className: "p-2 hover:bg-gray-100 rounded",
+            children: "\u2192"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxs6("div", { className: "grid grid-cols-7 gap-1", children: [
+        ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => /* @__PURE__ */ jsx7("div", { className: "text-center text-sm text-gray-500 py-2", children: day }, day)),
+        Array.from({ length: days[0].getDay() }).map((_, i) => /* @__PURE__ */ jsx7("div", {}, `empty-${i}`)),
+        days.map((day) => {
+          const isPast = day < today;
+          const isSelected = selectedDate?.toDateString() === day.toDateString();
+          return /* @__PURE__ */ jsx7(
+            "button",
+            {
+              onClick: () => !isPast && handleSelectDate(day),
+              disabled: isPast,
+              className: `
+                  p-2 text-center rounded-lg transition-colors
+                  ${isPast ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"}
+                  ${isSelected ? "bg-black text-white hover:bg-black" : ""}
+                `,
+              children: day.getDate()
+            },
+            day.toISOString()
+          );
+        })
+      ] })
+    ] });
+  };
+  const renderTimeSlots = () => /* @__PURE__ */ jsxs6("div", { children: [
+    /* @__PURE__ */ jsxs6("div", { className: "flex items-center justify-between mb-4", children: [
+      /* @__PURE__ */ jsx7(
+        "button",
+        {
+          onClick: goBack,
+          className: "text-sm text-gray-500 hover:text-black",
+          children: "\u2190 Back"
+        }
+      ),
+      /* @__PURE__ */ jsx7("h2", { className: "text-xl font-semibold", children: "Select a Time" }),
+      /* @__PURE__ */ jsx7("div", {})
+    ] }),
+    /* @__PURE__ */ jsx7("p", { className: "text-gray-600 mb-4", children: selectedDate && formatDate(selectedDate) }),
+    /* @__PURE__ */ jsx7("div", { className: "grid grid-cols-2 gap-2", children: availableSlots.filter((slot) => slot.available).map((slot) => /* @__PURE__ */ jsx7(
+      "button",
+      {
+        onClick: () => handleSelectSlot(slot),
+        className: `
+                p-3 border rounded-lg text-center transition-colors
+                ${selectedSlot?.id === slot.id ? "bg-black text-white border-black" : "border-gray-200 hover:border-black"}
+              `,
+        children: formatTime(slot.startTime)
+      },
+      slot.id
+    )) }),
+    availableSlots.filter((s) => s.available).length === 0 && /* @__PURE__ */ jsx7("p", { className: "text-gray-500 text-center py-8", children: "No available times for this date. Please select another date." })
+  ] });
+  const renderForm = () => /* @__PURE__ */ jsxs6("div", { children: [
+    /* @__PURE__ */ jsxs6("div", { className: "flex items-center justify-between mb-4", children: [
+      /* @__PURE__ */ jsx7(
+        "button",
+        {
+          onClick: goBack,
+          className: "text-sm text-gray-500 hover:text-black",
+          children: "\u2190 Back"
+        }
+      ),
+      /* @__PURE__ */ jsx7("h2", { className: "text-xl font-semibold", children: "Your Details" }),
+      /* @__PURE__ */ jsx7("div", {})
+    ] }),
+    /* @__PURE__ */ jsxs6("div", { className: "bg-gray-50 p-4 rounded-lg mb-6", children: [
+      /* @__PURE__ */ jsx7("div", { className: "font-medium", children: selectedEventType?.title }),
+      /* @__PURE__ */ jsxs6("div", { className: "text-sm text-gray-600", children: [
+        selectedDate && formatDate(selectedDate),
+        " at ",
+        selectedSlot && formatTime(selectedSlot.startTime)
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxs6("form", { onSubmit: handleSubmit, className: "space-y-4", children: [
+      /* @__PURE__ */ jsxs6("div", { children: [
+        /* @__PURE__ */ jsx7("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Name *" }),
+        /* @__PURE__ */ jsx7(
+          "input",
+          {
+            type: "text",
+            required: true,
+            value: formData.name,
+            onChange: (e) => setFormData((prev) => ({ ...prev, name: e.target.value })),
+            className: "w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-black focus:border-transparent"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxs6("div", { children: [
+        /* @__PURE__ */ jsx7("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Email *" }),
+        /* @__PURE__ */ jsx7(
+          "input",
+          {
+            type: "email",
+            required: true,
+            value: formData.email,
+            onChange: (e) => setFormData((prev) => ({ ...prev, email: e.target.value })),
+            className: "w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-black focus:border-transparent"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxs6("div", { children: [
+        /* @__PURE__ */ jsx7("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Phone" }),
+        /* @__PURE__ */ jsx7(
+          "input",
+          {
+            type: "tel",
+            value: formData.phone,
+            onChange: (e) => setFormData((prev) => ({ ...prev, phone: e.target.value })),
+            className: "w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-black focus:border-transparent"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxs6("div", { children: [
+        /* @__PURE__ */ jsx7("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Notes" }),
+        /* @__PURE__ */ jsx7(
+          "textarea",
+          {
+            value: formData.notes,
+            onChange: (e) => setFormData((prev) => ({ ...prev, notes: e.target.value })),
+            rows: 3,
+            className: "w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-black focus:border-transparent"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsx7(
+        "button",
+        {
+          type: "submit",
+          disabled: isLoading,
+          className: styles.button || "w-full bg-black text-white py-3 rounded-lg font-medium hover:opacity-90 disabled:opacity-50 transition-opacity",
+          children: isLoading ? "Booking..." : "Confirm Booking"
+        }
+      )
+    ] })
+  ] });
+  const renderConfirmation = () => /* @__PURE__ */ jsxs6("div", { className: "text-center py-8", children: [
+    /* @__PURE__ */ jsx7("div", { className: "text-4xl mb-4", children: "\u2713" }),
+    /* @__PURE__ */ jsx7("h2", { className: "text-2xl font-semibold mb-2", children: "Booking Confirmed!" }),
+    /* @__PURE__ */ jsx7("p", { className: "text-gray-600 mb-4", children: "You'll receive a confirmation email shortly." }),
+    /* @__PURE__ */ jsxs6("div", { className: "bg-gray-50 p-4 rounded-lg text-left", children: [
+      /* @__PURE__ */ jsx7("div", { className: "font-medium", children: selectedEventType?.title }),
+      /* @__PURE__ */ jsxs6("div", { className: "text-sm text-gray-600", children: [
+        selectedDate && formatDate(selectedDate),
+        " at ",
+        selectedSlot && formatTime(selectedSlot.startTime)
+      ] }),
+      /* @__PURE__ */ jsxs6("div", { className: "text-sm text-gray-600 mt-2", children: [
+        formData.name,
+        " \u2022 ",
+        formData.email
+      ] })
+    ] })
+  ] });
+  return /* @__PURE__ */ jsxs6("div", { className: styles.container || `bg-white border border-gray-200 rounded-lg p-6 ${className}`, children: [
+    headerContent,
+    error && /* @__PURE__ */ jsx7("div", { className: "mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm", children: error }),
+    isLoading && step === "eventType" ? /* @__PURE__ */ jsx7("div", { className: "text-center py-8 text-gray-500", children: "Loading..." }) : /* @__PURE__ */ jsxs6(Fragment2, { children: [
+      step === "eventType" && renderEventTypeSelection(),
+      step === "calendar" && renderCalendar(),
+      step === "time" && renderTimeSlots(),
+      step === "form" && renderForm(),
+      step === "confirmation" && renderConfirmation()
+    ] }),
+    footerContent
+  ] });
+}
 export {
   AddToCartButton,
+  ApplicationForm,
+  BookingWidget,
   CartDrawer,
+  ContactForm,
+  CreatorApplicationForm,
   CustomerPortal,
   ProductCard,
-  SubscribeWidget
+  SubscribeWidget,
+  VendorApplicationForm
 };
 //# sourceMappingURL=index.mjs.map
